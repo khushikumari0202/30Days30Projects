@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz-App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .quiz-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        select, button {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #007bff;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .start-btn {
+            margin-top: 10px;
+            background: #007bff;
+            color: white;
+        }
+
+        .start-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .options {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 12px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .option:hover {
+            background: #007bff;
+            color: white;
+        }
+
+        .timer {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #ff5722;
+            display: none;
+        }
+
+        .result {
+            font-size: 1.5em;
+            color: #4caf50;
+            display: none;
+        }
+
+        .restart-btn {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .rules-box {
+    background-color: #eef3ff;
+    border-left: 5px solid #007bff;
+    padding: 12px;
+    margin: 15px 0;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.rules-box h4 {
+    margin: 0 0 8px;
+    color: #007bff;
+}
+
+.rules-box ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.rules-box li {
+    margin-bottom: 6px;
+    font-size: 0.95em;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <h3>Select Quiz Options</h3>
+
+        <!-- Category Selection -->
+        <select id="category">
+            <option value="9">General Knowledge</option>
+            <option value="21">Sports</option>
+            <option value="18">Technology</option>
+            <option value="11">Entertainment (Movies)</option>
+        </select>
+
+        <!-- Difficulty Selection -->
+        <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+
+        <div class="rules-box">
+    <h4>📌 Quiz Rules</h4>
+    <ul>
+        <li>Total time is <strong>60 seconds</strong> for full quiz.</li>
+        <li>Maximum number of questions is <strong>50</strong> for full quiz.</li>
+        <li>Difficulty & category must be selected before starting.</li>
+        <li>Each correct answer gives you <strong>+1</strong> score.</li>
+        <li>You can't go back to previous questions.</li>
+        <li>Quiz will auto-submit when time ends.</li>
+    </ul>
+</div>
+
+        <br>
+        <button class="start-btn" id="startQuiz">Start Quiz</button>
+
+        <div class="timer">Time Left: <span id="time">30</span>s</div>
+        <div class="question"></div>
+        <div class="options"></div>
+
+        <div class="result">Your Score: <span id="score">0</span></div>
+        <button class="restart-btn">Restart Quiz</button>
+    </div>
+
+
+<script>
+    let quizData = [];
+    let currentQuestion = 0;
+    let score = 0;
+    let totalTime = 60;
+    let timerInterval;
+
+    const timerEl = document.getElementById("time");
+    const questionEl = document.querySelector(".question");
+    const optionsEl = document.querySelector(".options");
+    const resultEl = document.querySelector(".result");
+    const scoreEl = document.getElementById("score");
+    const restartBtn = document.querySelector(".restart-btn");
+    const startBtn = document.getElementById("startQuiz");
+
+    startBtn.addEventListener("click", () => {
+        const catId = document.getElementById("category").value;
+        const difficulty = document.getElementById("difficulty").value;
+        fetchQuestions(catId, difficulty);
+    });
+
+    async function fetchQuestions(catId, difficulty) {
+        const url = `https://opentdb.com/api.php?amount=50&category=${catId}&difficulty=${difficulty}&type=multiple`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        quizData = data.results.map(q => {
+            const opts = [...q.incorrect_answers, q.correct_answer];
+            shuffle(opts);
+            return {
+                question: decodeHTML(q.question),
+                options: opts.map(o => decodeHTML(o)),
+                answer: decodeHTML(q.correct_answer)
+            };
+        });
+
+        document.querySelector(".quiz-container h3").style.display = "none";
+        document.getElementById("category").style.display = "none";
+        document.getElementById("difficulty").style.display = "none";
+        startBtn.style.display = "none";
+        document.querySelector(".rules-box").style.display = "none";
+
+
+        document.querySelector(".timer").style.display = "block";
+        questionEl.style.display = "block";
+        optionsEl.style.display = "flex";
+
+        startTotalTimer();
+        loadQuestion();
+    }
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+    }
+
+    function decodeHTML(text) {
+        const txt = document.createElement("textarea");
+        txt.innerHTML = text;
+        return txt.value;
+    }
+
+    function loadQuestion() {
+        if (totalTime <= 0 || currentQuestion >= quizData.length) return endQuiz();
+
+        const q = quizData[currentQuestion];
+        questionEl.textContent = q.question;
+        optionsEl.innerHTML = "";
+
+        q.options.forEach(option => {
+            const btn = document.createElement("button");
+            btn.classList.add("option");
+            btn.textContent = option;
+            btn.onclick = () => checkAnswer(option);
+            optionsEl.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selected) {
+        if (selected === quizData[currentQuestion].answer) score++;
+        currentQuestion++;
+        loadQuestion();
+    }
+
+    function startTotalTimer() {
+        timerInterval = setInterval(() => {
+            totalTime--;
+            timerEl.textContent = totalTime;
+            if (totalTime <= 0) endQuiz();
+        }, 1000);
+    }
+
+    function endQuiz() {
+        clearInterval(timerInterval);
+        questionEl.style.display = "none";
+        optionsEl.style.display = "none";
+        document.querySelector(".timer").style.display = "none";
+
+        resultEl.style.display = "block";
+        scoreEl.textContent = score;
+        restartBtn.style.display = "block";
+    }
+
+    restartBtn.addEventListener("click", () => {
+        window.location.reload();
+    });
+</script>
+
+</body>
+</html>
