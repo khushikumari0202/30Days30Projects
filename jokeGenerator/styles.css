@@ -1,0 +1,72 @@
+body {
+margin: 0;
+padding: 0;
+font-family: 'Comic Sans MS', Comic, sans-serif;
+background: #ffeff0;
+/* Comic-style background: light pink with dotted pattern */
+background-image: radial-gradient(circle at center, #ffe1e4 20%, transparent 20%),
+radial-gradient(circle at bottom right, #ffe1e4 20%, transparent 20%);
+background-size: 50px 50px;
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+}
+
+.container {
+background: white;
+padding: 30px 25px;
+border-radius: 15px;
+box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+text-align: center;
+width: 400px;
+position: relative;
+}
+
+/* Logo styling */
+.logo {
+margin-bottom: 20px;
+}
+
+.logo svg {
+width: 80px;
+height: 80px;
+}
+
+.logo-text {
+font-size: 24px;
+margin-top: -10px;
+color: #e63946;
+text-shadow: 2px 2px #f1c0c0;
+}
+
+select {
+padding: 10px;
+width: 100%;
+border-radius: 8px;
+border: 2px solid #e63946;
+margin-bottom: 15px;
+font-size: 16px;
+}
+
+button {
+margin-top: 15px;
+padding: 12px;
+width: 100%;
+border-radius: 8px;
+border: none;
+font-size: 18px;
+background: #e63946;
+color: white;
+cursor: pointer;
+}
+button:hover {
+background: #d62839;
+}
+
+#joke {
+font-size: 18px;
+margin-top: 20px;
+color: #333;
+min-height: 60px;
+}
